@@ -19,9 +19,13 @@ from functions import (
 )
 
 car = []
-parentcar = Car([200, 200], 0)
-for i in range(20):
-    car.append(Car([200, 200], 0, parent_status=parentcar))
+
+for i in range(200):
+    car.append(Car([200, 200], 0))
+
+parentcar = []
+for i in range(elite_count):
+    parentcar.append(car[i])
 
 car_points = []
 car_cord = [200, 200]
@@ -155,7 +159,7 @@ while running:
 
     # all car logics
     # creating vision
-    for i in range(20):
+    for i in range(200):
         car[i].road_in_vision(road_body_centre)
         car[i].cast_ray(ray_count)
         car[i].detect_collison(car[i].seen_road)
@@ -183,7 +187,7 @@ while running:
 
     # new generation every 600 frames
     if frame == int(600 / n):
-        for i in range(20):
+        for i in range(200):
             car_points.append(
                 calculate_points(
                     car_cord, finish_point, car[i].pos, car[i].total_forward
@@ -192,14 +196,31 @@ while running:
             )
         frame = 0
         generation += 1
-        index = get_max_index(car_points)
-        parentcar = car[index]
+        index = sorted(
+            range(len(car_points)), key=lambda i: car_points[i], reverse=True
+        )[:elite_count]
+
+        # the index is calculated first by making a list of [0,1,2,3........ncars] then the key=lambda passes the carpints at the specific index of the list
+        # say if we have 0 then we pass it to the lamda function that returns the car point at index 0 then the list ie [0,1,2,.....] is sorted at the ascending order
+        # so we hace a ascending order of list based on the indices of the max car points the we do resverse to get the list in descending order
+        #
+        for i in range(elite_count):
+            parentcar[i] = car[index[i]]
         car = []
         car_points = []
 
+        # preserving current elites to next generation
         for i in range(200):
-            car.append(Car(car_cord, 0, parent_status=parentcar))
+            if i < elite_count:
+                car.append(Car(car_cord, 0, elite_rank=i))
+            else:
+                car.append(Car(car_cord, 0))
 
+            car[i].breed(parentcar)
+            # after the loop
+
+        for i in range(elite_count):
+            parentcar[i] = car[i]
     # rendering------------------------------------------------------------------------------------------------------
 
     # draw while the all_road list is yet to be updated
@@ -208,7 +229,9 @@ while running:
     fill_empty_spaces(all_road)
 
     draw_finish_point(finish_point)
-
+    best = parentcar[0]
+    pygame.draw.circle(screen, (0, 0, 255), (50, 50), 30, 3)
+    render_text(str(best.pos), (50, 100))
     # all text
     fps = clock.get_fps()
     fps_str = f"FPS: {fps:.2f}"

@@ -1,9 +1,10 @@
 import math
+import random
 
 import numpy
 import pygame
 
-from common import ray_count, screen, vision_threshold
+from common import elite_count, ray_count, screen, vision_threshold
 from functions import distance, mutate_weights, relu, render_text
 
 
@@ -12,13 +13,14 @@ class Car:
         self,
         pos,
         angle,
-        parent_status=None,
+        elite_rank=None,
     ):
         self.pos = list(pos)
         self.angle = math.radians(angle)
         self.resvel = 6
         self.vel_x = math.sin(self.angle) * self.resvel
         self.vel_y = math.cos(self.angle) * self.resvel
+        self.elite_rank = elite_rank
         self.coolision = False
         self.total_forward = 0
         self.total_backward = 0
@@ -49,27 +51,13 @@ class Car:
         self.mutation_rate = 0.1
         self.mutation_strength = 0.3
 
-        if parent_status is None:  # intitalizing the weights of the first generation
-            self.w_ih1 = numpy.random.uniform(
-                -1, 1, (input_size, hidden1_size)
-            )  # shape: (17, 10)
-            self.w_h1h2 = numpy.random.uniform(
-                -1, 1, (hidden1_size, hidden2_size)
-            )  # (10, 6)
-            self.w_h2o = numpy.random.uniform(
-                -1, 1, (hidden2_size, output_size)
-            )  # (6, 4)
-
-        else:
-            self.w_ih1 = mutate_weights(
-                parent_status.w_ih1, self.mutation_rate, self.mutation_strength
-            )
-            self.w_h1h2 = mutate_weights(
-                parent_status.w_h1h2, self.mutation_rate, self.mutation_strength
-            )
-            self.w_h2o = mutate_weights(
-                parent_status.w_h2o, self.mutation_rate, self.mutation_strength
-            )
+        self.w_ih1 = numpy.random.uniform(
+            -1, 1, (input_size, hidden1_size)
+        )  # shape: (17, 10)
+        self.w_h1h2 = numpy.random.uniform(
+            -1, 1, (hidden1_size, hidden2_size)
+        )  # (10, 6)
+        self.w_h2o = numpy.random.uniform(-1, 1, (hidden2_size, output_size))  # (6, 4)
 
     def update_axis(self, rotate_condn):
 
@@ -192,6 +180,43 @@ class Car:
                 max_index = i
 
         return max_index  # it is action to take place
+
+    def breed(self, parent):
+        parent_x = random.randint(0, len(parent) - 1)
+        parent_y = parent_x
+        while parent_x == parent_y:  # prevents both parent to be the same (or cloning)
+            parent_y = random.randint(0, len(parent) - 1)
+
+        # adding random mutation
+
+        if self.elite_rank == None:
+            mask = (numpy.random.random(self.w_ih1.shape) < 0.5).astype(int)
+            self.w_ih1 = (
+                mask * parent[parent_x].w_ih1 + (1 - mask) * parent[parent_y].w_ih1
+            )
+            mask = (numpy.random.random(self.w_h1h2.shape) < 0.5).astype(int)
+            self.w_h1h2 = (
+                mask * parent[parent_x].w_h1h2 + (1 - mask) * parent[parent_y].w_h1h2
+            )
+            mask = (numpy.random.random(self.w_h2o.shape) < 0.5).astype(int)
+            self.w_h2o = (
+                mask * parent[parent_x].w_h2o + (1 - mask) * parent[parent_y].w_h2o
+            )
+
+            self.w_ih1 = mutate_weights(
+                self.w_ih1, self.mutation_rate, self.mutation_strength
+            )
+            self.w_h1h2 = mutate_weights(
+                self.w_h1h2, self.mutation_rate, self.mutation_strength
+            )
+            self.w_h2o = mutate_weights(
+                self.w_h2o, self.mutation_rate, self.mutation_strength
+            )
+
+        else:
+            self.w_ih1 = parent[self.elite_rank].w_ih1
+            self.w_h1h2 = parent[self.elite_rank].w_h1h2
+            self.w_h2o = parent[self.elite_rank].w_h2o
 
     def detect_collison(self, road):
         for coordinate in road:

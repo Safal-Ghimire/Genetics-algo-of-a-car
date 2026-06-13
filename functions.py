@@ -110,7 +110,7 @@ def calculate_points(start, end, position, total_forward_press):
         dist_to_end = 0.0001  # prevent division by zero
     score = -5 * (dist_to_end) + 0.6 * dist_from_start + 0.2 * total_forward_press
 
-    print(f"forward:{total_forward_press}")
+    # print(f"forward:{total_forward_press}")
     return score
 
 
