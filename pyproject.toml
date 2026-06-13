@@ -1,0 +1,10 @@
+[project]
+name = "genetics-algo-of-a-car"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = "==3.12.13"
+dependencies = [
+"pygame",
+"numpy"
+]
