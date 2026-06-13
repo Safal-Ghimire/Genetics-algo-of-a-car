@@ -185,29 +185,31 @@ while running:
         car[i].draw_car()
         car[i].draw_ray()
 
+    # calculation of carpoint
+
+    for i in range(carcount):
+        car_points.append(
+            calculate_points(car_cord, finish_point, car[i].pos, car[i].total_forward)
+            - car[i].total_backward
+        )
+
+    # the index is calculated first by making a list of [0,1,2,3........ncars] then the key=lambda passes the carpints at the specific index of the list
+    # say if we have 0 then we pass it to the lamda function that returns the car point at index 0 then the list ie [0,1,2,.....] is sorted at the ascending order
+    # so we hace a ascending order of list based on the indices of the max car points the we do resverse to get the list in descending order
+    #
+
+    index = sorted(range(len(car_points)), key=lambda i: car_points[i], reverse=True)[
+        :elite_count
+    ]
+
     # new generation every 600 frames
     if frame == int(600 / n):
-        for i in range(carcount):
-            car_points.append(
-                calculate_points(
-                    car_cord, finish_point, car[i].pos, car[i].total_forward
-                )
-                - car[i].total_backward
-            )
         frame = 0
         generation += 1
-        index = sorted(
-            range(len(car_points)), key=lambda i: car_points[i], reverse=True
-        )[:elite_count]
 
-        # the index is calculated first by making a list of [0,1,2,3........ncars] then the key=lambda passes the carpints at the specific index of the list
-        # say if we have 0 then we pass it to the lamda function that returns the car point at index 0 then the list ie [0,1,2,.....] is sorted at the ascending order
-        # so we hace a ascending order of list based on the indices of the max car points the we do resverse to get the list in descending order
-        #
         for i in range(elite_count):
             parentcar[i] = car[index[i]]
         car = []
-        car_points = []
 
         # preserving current elites to next generation
         for i in range(carcount):
@@ -221,6 +223,8 @@ while running:
 
         for i in range(elite_count):
             parentcar[i] = car[i]
+
+    car_points = []
     # rendering------------------------------------------------------------------------------------------------------
 
     # draw while the all_road list is yet to be updated
@@ -234,6 +238,9 @@ while running:
         screen, (23, 255, 145), parentcar[0].pos, 30, width=4
     )  # pointing the best car from the past generation
 
+    pygame.draw.circle(
+        screen, (255, 0, 0), car[index[0]].pos, 30, width=4
+    )  # best car at this generation
     # all text
     fps = clock.get_fps()
     fps_str = f"FPS: {fps:.2f}"
