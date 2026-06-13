@@ -1,5 +1,6 @@
 import pygame
 
+carcount = 30
 pygame.font.init()
 screen = pygame.display.set_mode((900, 800))
 pygame.display.set_caption("Self driving ai")

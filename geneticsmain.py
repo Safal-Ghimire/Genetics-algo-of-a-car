@@ -20,7 +20,7 @@ from functions import (
 
 car = []
 
-for i in range(200):
+for i in range(carcount):
     car.append(Car([200, 200], 0))
 
 parentcar = []
@@ -75,7 +75,7 @@ while running:
 
         # steering
         keys = pygame.key.get_pressed()
-        for i in range(20):
+        for i in range(carcount):
             if car[i].coolision == False:
                 if keys[pygame.K_d]:  # rotate clockwise
                     car[i].update_axis(1)
@@ -159,7 +159,7 @@ while running:
 
     # all car logics
     # creating vision
-    for i in range(200):
+    for i in range(carcount):
         car[i].road_in_vision(road_body_centre)
         car[i].cast_ray(ray_count)
         car[i].detect_collison(car[i].seen_road)
@@ -187,7 +187,7 @@ while running:
 
     # new generation every 600 frames
     if frame == int(600 / n):
-        for i in range(200):
+        for i in range(carcount):
             car_points.append(
                 calculate_points(
                     car_cord, finish_point, car[i].pos, car[i].total_forward
@@ -210,7 +210,7 @@ while running:
         car_points = []
 
         # preserving current elites to next generation
-        for i in range(200):
+        for i in range(carcount):
             if i < elite_count:
                 car.append(Car(car_cord, 0, elite_rank=i))
             else:
@@ -229,9 +229,11 @@ while running:
     fill_empty_spaces(all_road)
 
     draw_finish_point(finish_point)
-    best = parentcar[0]
-    pygame.draw.circle(screen, (0, 0, 255), (50, 50), 30, 3)
-    render_text(str(best.pos), (50, 100))
+    print(parentcar[0].pos)
+    pygame.draw.circle(
+        screen, (23, 255, 145), parentcar[0].pos, 30, width=4
+    )  # pointing the best car from the past generation
+
     # all text
     fps = clock.get_fps()
     fps_str = f"FPS: {fps:.2f}"
